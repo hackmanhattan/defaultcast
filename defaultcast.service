@@ -1,0 +1,18 @@
+[Unit]
+Description=defaultcast for Hack Manhattan
+After=network-online.target
+
+[Service]
+User=nobody
+Group=nogroup
+Type=forking
+GuessMainPID=yes
+KillMode=mixed
+Environment="DISPLAY_NAME=Hackerspace"
+Environment="DASHBOARD_URL=https://example.org/"
+Environment="IGNORE_CEC=True"
+WorkingDirectory=/opt/defaultcast/
+ExecStart=/usr/bin/python3 /opt/defaultcast/app.py
+
+[Install]
+WantedBy=multi-user.target
