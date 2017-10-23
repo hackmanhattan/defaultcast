@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hack Manhattan Dashboard (Work in Progress)</title>
+<meta charset="utf-8">
+<style>
+section {
+  position: relative;
+  z-index: 5;
+}
+body {
+  margin: 0;
+  background-color: #fff;
+  color: #000;
+  font-family: monospace;
+  line-height: 1.5;
+  font-size: 120%;
+  position: relative;
+  overflow: hidden;
+}
+body.chromecast {
+  margin: 8px 8px 8px 1.6em;
+}
+body::before {
+  content: ' ';
+  display: block;
+  left: 0;
+  top: 1em;
+  width: 75%;
+  height: 100%;
+  z-index: 1;
+  position: absolute;
+  opacity: 0.3;
+  background-image: url('hmlogo.svg');
+  background-repeat: no-repeat;
+  background-size: auto 65%;
+  background-position: center center;
+}
+section {
+  width: 49.5%;
+  display: inline-block;
+  height: 358px;
+  box-sizing: border-box;
+  padding: 0.5ex;
+  vertical-align: top;
+}
+section:nth-child(even) {
+  background: #000;
+  color: #fff;
+}
+.full {
+  padding: 0;
+}
+.full img {
+  width: 100%;
+}
+.chromecast section {
+  width: 49%;
+}
+#corner {
+  padding: 0.5ex;
+  position: fixed;
+  height: 5em;
+  bottom: 0;
+  left: 0;
+}
+.chromecast #corner {
+  bottom: 1.1em;
+  left: 1.6em;
+}
+h1, h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+object {
+  vertical-align: middle;
+  margin-top: -0.2em;
+  margin-right: -0.3em;
+}
+#slack {
+  background: #4d394b;
+}
+h2 .chromecast {
+  display: none;
+}
+.chromecast h2 .chromecast {
+  display: inline;
+}
+#slack span {
+  display: inline-block;
+  width: 15em;
+  vertical-align: top;
+}
+#slack span:nth-child(even) {
+  width: calc(100% - 16em);
+}
+</style>
+</head>
+<body>
+<section>
+<h1>Hack Manhattan Dashboard</h1>
+This is a work in progress project. If you'd like to contribute to make this one-stop-shop for useful things to know when you are at the space, get in touch with the Hack Manhattan wiki user "mz".<br><br>
+<a href="https://api.meetup.com/hackmanhattan/upcoming.ical?key=9332c48203531934191d2e4681f64">Hack Manhattan Meetup iCal</a><br>
+<a href="https://wiki.hackmanhattan.com/api.php?hidebots=1&amp;days=30&amp;limit=5&amp;action=feedrecentchanges&amp;feedformat=atom">Hack Manhattan Recent Wiki Edits</a>
+</section>
+<section id="slack">
+<h2>#hackerspace on Slack</h2>
+<div>(Just an example at the moment)</div>
+<div><span>[4:28pm] <strong>&lt;justin&gt;</strong></span> <span>I AM QUOTING A CINEMATIC FEATURE MANY OF MY FELLOW HUMANS HAVE ALSO SEEN AND ENJOYED AND WE WILL LAUGH AT OUR SHARED ENJOYMENT OF THIS REFERENCE</span></div>
+<div><span>[4:28pm] <strong>&lt;jackolantern&gt;</strong></span> <span>lol</span></div>
+<div><span>[4:28pm] <strong>&lt;repjarms&gt;</strong></span> <span>HAVING UNDERSTOOD THIS REFERENCE, I AM COMMENCING IN A DISPLAY OF EUPHORIC ENJOYMENT. HA... HA... HA...</span></div>
+<div><span>[4:29pm] <strong>&lt;justin&gt;</strong></span> <span>man this slack is making my workdays way better</span></div>
+</section>
+<section>
+<h2>Nearby subway times</h2>
+<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=16">NRQW GTFS feed</a><br>
+<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=21">BDFM GTFS feed<br>
+<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=1">123456S GTFS feed</a><br>
+<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=2">L GTFS feed</a>
+</section>
+<section class="full">
+<img src="http://192.168.42.157:8080/?action=stream" alt="Webcam" />
+</section>
+<div id="corner">
+<h2><span class="chromecast"><object type="image/svg+xml" data="chromecast.svg">(on Chromecast)</object> Hackerspace</span>&nbsp;</h2>
+<div><span id="datetime"></span></div>
+<div><span id="weather"><span id="weatherf"></span>°F / <span id="weatherc"></span>°C <span id="weathert"></span></span></div>
+</div>
+<script type="text/javascript">
+function checkTime(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
+}
+
+var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function putTime() {
+    var today = new Date();
+    var h = today.getHours();
+    var mi = today.getMinutes();
+    var da = days[today.getDay()];
+    var mo = months[today.getMonth()];
+    var dt = today.getDate();
+    // add a zero in front of numbers<10
+    mi = checkTime(mi);
+    document.getElementById('datetime').innerHTML = da + ' ' + mo  + ' ' + dt + ', ' + h + ":" + mi;
+    t = setTimeout(function () {
+        putTime()
+    }, 2000);
+}
+putTime();
+
+var getJSON = function(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+        var status = xhr.status;
+        if (status === 200) {
+            callback(null, xhr.response);
+        } else {
+            callback(status, xhr.response);
+        }
+    }
+    xhr.send();
+};
+
+function checkWeather() {
+    getJSON('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20query.multi%20where%20queries%3D%22select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27c%27%3Bselect%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27f%27%22&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys', function(e,d){
+        document.getElementById('weatherc').innerHTML = d.query.results.results[0].channel.item.condition.temp;
+        document.getElementById('weatherf').innerHTML = d.query.results.results[1].channel.item.condition.temp;
+        document.getElementById('weathert').innerHTML = '(' + d.query.results.results[1].channel.item.condition.text + ')';
+    });
+    setTimeout(function() {
+        checkWeather()
+    }, 600000);
+}
+checkWeather();
+if (navigator.userAgent.match(/CrKey/g) != null) {
+    document.body.className = "chromecast";
+}
+</script>
+</body>
+</html>

@@ -63,7 +63,7 @@ class DashboardLauncher():
     def should_launch(self):
         """ If the device is active, the dashboard is not already active, and no other app is active."""
         return (self.device.status is not None and
-                self.device.status.display_name in ('Backdrop', self.dashboard_app_name))
+                self.device.status.display_name in ('Backdrop'))
 
     def launch_dashboard(self):
         logger.debug('Launching dashboard on Chromecast ' + self.device.name)
