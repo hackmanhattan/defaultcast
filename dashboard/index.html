@@ -18,9 +18,6 @@ body {
   position: relative;
   overflow: hidden;
 }
-body.chromecast {
-  margin: 8px 8px 8px 1.6em;
-}
 body::before {
   content: ' ';
   display: block;
@@ -31,18 +28,26 @@ body::before {
   z-index: 1;
   position: absolute;
   opacity: 0.3;
-  background-image: url('hmlogo.svg');
+  background-image: url('hmlogo-notonair.svg');
   background-repeat: no-repeat;
   background-size: auto 65%;
   background-position: center center;
+  transition: opacity 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+body.surveilled::before {
+  background-image: url('hmlogo-onair.svg');
+  opacity: 1;
 }
 section {
   width: 49.5%;
   display: inline-block;
-  height: 358px;
+  height: 366px;
   box-sizing: border-box;
   padding: 0.5ex;
   vertical-align: top;
+}
+.chromecast section {
+  width: 49.6%;
 }
 section:nth-child(even) {
   background: #000;
@@ -51,22 +56,12 @@ section:nth-child(even) {
 .full {
   padding: 0;
 }
-.full img {
-  width: 100%;
-}
-.chromecast section {
-  width: 49%;
-}
 #corner {
   padding: 0.5ex;
   position: fixed;
   height: 5em;
   bottom: 0;
   left: 0;
-}
-.chromecast #corner {
-  bottom: 1.1em;
-  left: 1.6em;
 }
 h1, h2 {
   margin-top: 0;
@@ -99,9 +94,8 @@ h2 .chromecast {
 <body>
 <section>
 <h1>Hack Manhattan Dashboard</h1>
-This is a work in progress project. If you'd like to contribute to make this one-stop-shop for useful things to know when you are at the space, get in touch with the Hack Manhattan wiki user "mz".<br><br>
-<a href="https://api.meetup.com/hackmanhattan/upcoming.ical?key=9332c48203531934191d2e4681f64">Hack Manhattan Meetup iCal</a><br>
-<a href="https://wiki.hackmanhattan.com/api.php?hidebots=1&amp;days=30&amp;limit=5&amp;action=feedrecentchanges&amp;feedformat=atom">Hack Manhattan Recent Wiki Edits</a>
+<h2>Meetup Calendar</h2>
+<div id="meetup"><a href="https://api.meetup.com/hackmanhattan/events?sign=true&amp;photo-host=public&amp;page=5">Should go here at some point</a></div>
 </section>
 <section id="slack">
 <h2>#hackerspace on Slack</h2>
@@ -112,14 +106,17 @@ This is a work in progress project. If you'd like to contribute to make this one
 <div><span>[4:29pm] <strong>&lt;justin&gt;</strong></span> <span>man this slack is making my workdays way better</span></div>
 </section>
 <section>
+<h2>Wiki Activity</h2>
+<div id="wiki"><a href="https://wiki.hackmanhattan.com/api.php?hidebots=1&amp;days=30&amp;limit=5&amp;action=feedrecentchanges&amp;feedformat=atom">Hack Manhattan Recent Wiki Edits</a></div>
+<!--
 <h2>Nearby subway times</h2>
 <a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=16">NRQW GTFS feed</a><br>
 <a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=21">BDFM GTFS feed<br>
 <a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=1">123456S GTFS feed</a><br>
-<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=2">L GTFS feed</a>
+<a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=2">L GTFS feed</a>-->
 </section>
 <section class="full">
-<img src="http://192.168.42.157:8080/?action=stream" alt="Webcam" />
+<img src="http://192.168.42.157:8080/?action=stream" alt="Stream from the door" style="width: 100%" />
 </section>
 <div id="corner">
 <h2><span class="chromecast"><object type="image/svg+xml" data="chromecast.svg">(on Chromecast)</object> Hackerspace</span>&nbsp;</h2>
@@ -153,13 +150,33 @@ function putTime() {
 }
 putTime();
 
-var getJSON = function(url, callback) {
+var getJSON = function(url, callback, rtype='json') {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
-    xhr.responseType = 'json';
+    xhr.responseType = rtype;
     xhr.onload = function() {
         var status = xhr.status;
-        if (status === 200) {
+        if (status === 200 && rtype == 'text') {
+            lines = xhr.response.split('\n');
+            if (lines.length > 1) {
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].indexOf("{") > -1) {
+                        lines[i] = JSON.parse(lines[i]);
+                        if (Object.keys(lines[i]).indexOf("referer")) {
+                            lines[i].kind = lines[i].action.split("/")[2].split(" ")[0].split(".")[0];
+                            lines[i].time = Date.parse(lines[i].time.replace(":", " "));
+                            lines[i].start = false;
+                            if (lines[i].kind == "stream") lines[i].start = lines[i].action.indexOf(".html") > -1;
+                        }
+                    } else {
+                        lines.pop(i)
+                    }
+                }
+                callback(null, lines.reverse());
+            } else {
+                callback(null, []);
+            }
+        } else if (status === 200) {
             callback(null, xhr.response);
         } else {
             callback(status, xhr.response);
@@ -168,19 +185,37 @@ var getJSON = function(url, callback) {
     xhr.send();
 };
 
+function checkSurveillance() {
+    // doesn't support concurrent streams right now, but you know ¯\_(ツ)_/¯
+    getJSON('https://space.bo.x0.rs/sousveillance/agent.log?' + Math.random(), function(e,d){
+        if (d.length > 0) {
+            if (d[0].kind == "snapshot" && (new Date().getTime() / 1000) - (d[0].time / 1000) < 5) {
+                document.body.classList.add("surveilled");
+                setTimeout(function() {
+                    document.body.classList.remove("surveilled");
+                }, 7500);
+            } else if (d[0].kind == "stream" && d[0].start) {
+                document.body.classList.add("surveilled");
+            } else if (d[0].kind == "stream" && ! d[0].start) {
+                document.body.classList.remove("surveilled");
+            }
+        }
+    }, 'text');
+    setTimeout(checkSurveillance, 5000);
+}
+
 function checkWeather() {
     getJSON('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20query.multi%20where%20queries%3D%22select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27c%27%3Bselect%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27f%27%22&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys', function(e,d){
         document.getElementById('weatherc').innerHTML = d.query.results.results[0].channel.item.condition.temp;
         document.getElementById('weatherf').innerHTML = d.query.results.results[1].channel.item.condition.temp;
         document.getElementById('weathert').innerHTML = '(' + d.query.results.results[1].channel.item.condition.text + ')';
     });
-    setTimeout(function() {
-        checkWeather()
-    }, 600000);
+    setTimeout(checkWeather, 600000);
 }
 checkWeather();
+checkSurveillance();
 if (navigator.userAgent.match(/CrKey/g) != null) {
-    document.body.className = "chromecast";
+    document.body.classList.add("chromecast");
 }
 </script>
 </body>
