@@ -188,16 +188,21 @@ var getJSON = function(url, callback, rtype='json') {
 function checkSurveillance() {
     // doesn't support concurrent streams right now, but you know ¯\_(ツ)_/¯
     getJSON('https://space.bo.x0.rs/sousveillance/agent.log?' + Math.random(), function(e,d){
-        if (d.length > 0) {
-            if (d[0].kind == "snapshot" && (new Date().getTime() / 1000) - (d[0].time / 1000) < 5) {
-                document.body.classList.add("surveilled");
-                setTimeout(function() {
+        if (e != null) {
+            console.log(e);
+            console.log(d);
+        } else {
+            if (d.length > 0) {
+                if (d[0].kind == "snapshot" && (new Date().getTime() / 1000) - (d[0].time / 1000) < 5) {
+                    document.body.classList.add("surveilled");
+                    setTimeout(function() {
+                        document.body.classList.remove("surveilled");
+                    }, 7500);
+                } else if (d[0].kind == "stream" && d[0].start) {
+                    document.body.classList.add("surveilled");
+                } else if (d[0].kind == "stream" && ! d[0].start) {
                     document.body.classList.remove("surveilled");
-                }, 7500);
-            } else if (d[0].kind == "stream" && d[0].start) {
-                document.body.classList.add("surveilled");
-            } else if (d[0].kind == "stream" && ! d[0].start) {
-                document.body.classList.remove("surveilled");
+                }
             }
         }
     }, 'text');
@@ -206,9 +211,14 @@ function checkSurveillance() {
 
 function checkWeather() {
     getJSON('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20query.multi%20where%20queries%3D%22select%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27c%27%3Bselect%20item.condition%20from%20weather.forecast%20where%20woeid%20%3D%202459115%20and%20u%3D%27f%27%22&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys', function(e,d){
-        document.getElementById('weatherc').innerHTML = d.query.results.results[0].channel.item.condition.temp;
-        document.getElementById('weatherf').innerHTML = d.query.results.results[1].channel.item.condition.temp;
-        document.getElementById('weathert').innerHTML = '(' + d.query.results.results[1].channel.item.condition.text + ')';
+        if (e != null) {
+            console.log(e);
+            console.log(d);
+        } else {
+            document.getElementById('weatherc').innerHTML = d.query.results.results[0].channel.item.condition.temp;
+            document.getElementById('weatherf').innerHTML = d.query.results.results[1].channel.item.condition.temp;
+            document.getElementById('weathert').innerHTML = '(' + d.query.results.results[1].channel.item.condition.text + ')';
+        }
     });
     setTimeout(checkWeather, 600000);
 }
