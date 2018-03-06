@@ -81,13 +81,20 @@ h2 .chromecast {
 .chromecast h2 .chromecast {
   display: inline;
 }
-#slack span {
-  display: inline-block;
-  width: 15em;
-  vertical-align: top;
+#slack #chat {
+  width: 100%;
+  height: calc(100% - 2em);
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
 }
-#slack span:nth-child(even) {
-  width: calc(100% - 16em);
+
+#chat p {
+  margin: 0 0 0.3em 0;
+  padding: 0;
 }
 </style>
 </head>
@@ -99,11 +106,7 @@ h2 .chromecast {
 </section>
 <section id="slack">
 <h2>#hackerspace on Slack</h2>
-<div>(Just an example at the moment)</div>
-<div><span>[4:28pm] <strong>&lt;justin&gt;</strong></span> <span>I AM QUOTING A CINEMATIC FEATURE MANY OF MY FELLOW HUMANS HAVE ALSO SEEN AND ENJOYED AND WE WILL LAUGH AT OUR SHARED ENJOYMENT OF THIS REFERENCE</span></div>
-<div><span>[4:28pm] <strong>&lt;jackolantern&gt;</strong></span> <span>lol</span></div>
-<div><span>[4:28pm] <strong>&lt;repjarms&gt;</strong></span> <span>HAVING UNDERSTOOD THIS REFERENCE, I AM COMMENCING IN A DISPLAY OF EUPHORIC ENJOYMENT. HA... HA... HA...</span></div>
-<div><span>[4:29pm] <strong>&lt;justin&gt;</strong></span> <span>man this slack is making my workdays way better</span></div>
+<div id="chat"></div>
 </section>
 <section>
 <h2>Wiki Activity</h2>
@@ -123,7 +126,19 @@ h2 .chromecast {
 <div><span id="datetime"></span></div>
 <div><span id="weather"><span id="weatherf"></span>°F / <span id="weatherc"></span>°C <span id="weathert"></span></span></div>
 </div>
+<script src="app.js"></script>
 <script type="text/javascript">
+require("js/app").App.connect("C4XS939EY", function (msg) {
+    var el = document.createElement("p"),
+        chat = document.getElementById("chat");
+    el.appendChild(document.createTextNode(msg["from"] + ": " + msg["body"]));
+    chat.insertBefore(el, chat.firstChild);
+
+    if (chat.childElementCount > 50) {
+        chat.removeChild(chat.lastChild);
+    }
+});
+
 function checkTime(i) {
     if (i < 10) {
         i = "0" + i;
