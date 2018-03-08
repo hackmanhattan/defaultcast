@@ -104,8 +104,9 @@ def main():
             logger.debug('No Devices Found')
             exit()
 
-        attempt += 1
-        time.sleep(30)
+        if len(casts) == 0:
+            attempt += 1
+            time.sleep(30)
 
     cast = next(cc for cc in casts if DISPLAY_NAME in (None, '') or cc.device.friendly_name == DISPLAY_NAME)
 
