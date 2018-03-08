@@ -22,23 +22,26 @@ body::before {
   content: ' ';
   display: block;
   left: 0;
-  top: 1em;
+  top: 0;
   width: 75%;
   height: 100%;
   z-index: 1;
   position: absolute;
   opacity: 0.3;
-  background-image: url('hmlogo-notonair.svg');
+  background-image: url('hmlogo-notonair-intense.svg');
   background-repeat: no-repeat;
-  background-size: auto 65%;
-  background-position: center center;
+  background-size: auto 150%;
+  background-position: center 35%;
   transition: opacity 1s cubic-bezier(0.23, 1, 0.32, 1);
 }
 body.surveilled::before {
-  background-image: url('hmlogo-onair.svg');
+  background-image: url('hmlogo-onair-intense.svg');
   opacity: 1;
+  z-index: 3;
 }
 section {
+  position: relative;
+  z-index: 2;
   width: 49.5%;
   display: inline-block;
   height: 366px;
@@ -67,6 +70,14 @@ h1, h2 {
   margin-top: 0;
   margin-bottom: 0;
 }
+h1 {
+  background-image: url(hmtext.svg);
+  background-repeat: no-repeat;
+  background-size: 50%;
+  padding-top: 2em;
+  height: 0;
+  overflow: hidden;
+}
 object {
   vertical-align: middle;
   margin-top: -0.2em;
@@ -74,6 +85,9 @@ object {
 }
 #slack {
   background: #4d394b;
+  background-image: url(Slack_Icon.png);
+  background-repeat: no-repeat;
+  background-position: 115.5% -8em;
 }
 h2 .chromecast {
   display: none;
@@ -96,22 +110,48 @@ h2 .chromecast {
   margin: 0 0 0.3em 0;
   padding: 0;
 }
+
+#chat p.highlight {
+  color: #000;
+  background: darkorange;
+  font-weight: bold;
+}
+#chat img {
+  height: 1.5em;
+  vertical-align: bottom;
+}
+#meetup {
+  background: url(Meetup_Logo.png);
+  background-size: 33%;
+  background-repeat: no-repeat;
+  background-position: 100% -5em;
+}
+h2 img {
+  vertical-align: text-bottom;
+}
+#patreon span {
+  font-weight: bold;
+  font-size: 1.5em;
+}
 </style>
 </head>
 <body>
-<section>
+<section id="meetup">
 <h1>Hack Manhattan Dashboard</h1>
 <h2>Meetup Calendar</h2>
-<div id="meetup"><a href="https://api.meetup.com/hackmanhattan/events?sign=true&amp;photo-host=public&amp;page=5">Should go here at some point</a></div>
+<div><a href="https://api.meetup.com/hackmanhattan/events?sign=true&amp;photo-host=public&amp;page=5">Should go here at some point</a></div>
 </section>
 <section id="slack">
 <h2>#hackerspace on Slack</h2>
 <div id="chat"></div>
 </section>
-<section>
+<section id="patreon">
+<h2><img src="Patreon_Logo.png" /><img src="patreonqr.png"/><br />patreon.com/hackmanhattan</h2>
+<div><span id="patreon-money">$8</span> per month, coming from <span id="patrons">2</span> patrons</div>
+<!--
 <h2>Wiki Activity</h2>
 <div id="wiki"><a href="https://wiki.hackmanhattan.com/api.php?hidebots=1&amp;days=30&amp;limit=5&amp;action=feedrecentchanges&amp;feedformat=atom">Hack Manhattan Recent Wiki Edits</a></div>
-<!--
+
 <h2>Nearby subway times</h2>
 <a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=16">NRQW GTFS feed</a><br>
 <a href="http://datamine.mta.info/mta_esi.php?key=a83227f540c4d8b004e1170151fc8c96&amp;feed_id=21">BDFM GTFS feed<br>
@@ -126,25 +166,56 @@ h2 .chromecast {
 <div><span id="datetime"></span></div>
 <div><span id="weather"><span id="weatherf"></span>°F / <span id="weatherc"></span>°C <span id="weathert"></span></span></div>
 </div>
-<script src="app.js"></script>
+<script src="app.js" type="text/javascript"></script>
+<script src="emoji.js" type="text/javascript"></script>
 <script type="text/javascript">
-require("js/app").App.connect("C4XS939EY", function (msg) {
-    var el = document.createElement("p"),
-        chat = document.getElementById("chat");
-    el.appendChild(document.createTextNode(msg["from"] + ": " + msg["body"]));
-    chat.insertBefore(el, chat.firstChild);
+var emoji = new EmojiConvertor();
 
-    if (chat.childElementCount > 50) {
-        chat.removeChild(chat.lastChild);
-    }
-});
+emoji.img_sets["google"].path = "img-google-64/";
+emoji.img_set = "google";
+emoji.replace_mode = "img";
+emoji.supports_css = false;
+emoji.init_env();
 
 function checkTime(i) {
-    if (i < 10) {
-        i = "0" + i;
-    }
+    if (i < 10) i = "0" + i;
     return i;
 }
+
+function msgHandler(msg) {
+    var el = document.createElement("p"),
+        chat = document.getElementById("chat"),
+        d = new Date(0);
+
+    d.setUTCSeconds(msg["ts"]);
+    var ts = d.getHours() + ":" + checkTime(d.getMinutes());
+        b = msg["body"];
+
+    b = b.replace(/<\!(\w+)>/, "@$1");
+    b = b.replace("<", "&lt;");
+    b = emoji.replace_colons(b);
+    for (var i = 0; i < Object.keys(msg["emoji"]).length; i++) {
+        var hmemoji = Object.keys(msg["emoji"])[i];
+        b = b.replace(hmemoji, "<img src='" +  msg["emoji"][hmemoji] + "'/>");
+    }
+
+    el.innerHTML = "[" + ts + "] " + msg["from"] + ": " + b;
+    if (b.indexOf("@here") > -1 || b.indexOf("@channel") > -1 || b.indexOf("#hackerspace") > -1) {
+        el.classList.add("highlight");
+    }
+    chat.insertBefore(el, chat.firstChild);
+
+    if (chat.childElementCount > 30) {
+        chat.removeChild(chat.lastChild);
+    }
+}
+
+var bottest = "C4TTY27RS";
+var hackerspace = "C4XS939EY";
+require("js/app").App.connect(hackerspace, msgHandler, function (catchup) {
+    catchup.forEach(msgHandler);
+});
+
 
 var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -200,6 +271,15 @@ var getJSON = function(url, callback, rtype='json') {
     xhr.send();
 };
 
+function checkPatreon() {
+    getJSON('https://space.bo.x0.rs/dashboard/patreon.json', function(e,d) {
+        var sum = "" + d.included[0].attributes.pledge_sum;
+        document.getElementById("patreon-money").innerHTML = "$" + sum.slice(0, -2);
+        document.getElementById("patrons").innerHTML = d.included[0].attributes.patron_count;
+    });
+    setTimeout(checkPatreon, 3600000);
+}
+
 function checkSurveillance() {
     // doesn't support concurrent streams right now, but you know ¯\_(ツ)_/¯
     getJSON('https://space.bo.x0.rs/sousveillance/agent.log?' + Math.random(), function(e,d){
@@ -239,6 +319,7 @@ function checkWeather() {
 }
 checkWeather();
 checkSurveillance();
+checkPatreon();
 if (navigator.userAgent.match(/CrKey/g) != null) {
     document.body.classList.add("chromecast");
 }
