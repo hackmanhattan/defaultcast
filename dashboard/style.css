@@ -1,0 +1,151 @@
+section {
+  position: relative;
+  z-index: 5;
+}
+body {
+  margin: 0;
+  background-color: #fff;
+  color: #000;
+  font-family: monospace;
+  line-height: 1.5;
+  font-size: 120%;
+  position: relative;
+  overflow: hidden;
+}
+body::before {
+  content: ' ';
+  display: block;
+  left: 0;
+  top: 0;
+  width: 80%;
+  height: 100%;
+  z-index: 1;
+  position: absolute;
+  opacity: 0.3;
+  background-image: url('hmlogo-notonair-intense.svg');
+  background-repeat: no-repeat;
+  background-size: auto 150%;
+  background-position: center 35%;
+  transition: opacity 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+body.surveilled::before {
+  background-image: url('hmlogo-onair-intense.svg');
+  opacity: 1;
+  z-index: 3;
+}
+section {
+  position: relative;
+  z-index: 2;
+  width: 49.5%;
+  display: inline-block;
+  height: 366px;
+  box-sizing: border-box;
+  padding: 0.5ex;
+  vertical-align: top;
+}
+.chromecast section {
+  width: 49.6%;
+}
+section:nth-child(even) {
+  background: #000;
+  color: #fff;
+}
+#door {
+  padding: 0;
+  overflow: hidden;
+}
+#door img {
+  display: block;
+  margin-top: -50px;
+  margin-left: -30px;
+}
+#corner {
+  padding: 0.5ex;
+  position: fixed;
+  height: 5em;
+  bottom: 0;
+  left: 0;
+}
+h1, h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+h1 {
+  background-image: url(hmtext.svg);
+  background-repeat: no-repeat;
+  background-size: 50%;
+  padding-top: 2em;
+  height: 0;
+  overflow: hidden;
+}
+object {
+  vertical-align: middle;
+  margin-top: -0.2em;
+  margin-right: -0.3em;
+}
+#slack {
+  background: #4d394b;
+  background-image: url(Slack_Icon.png);
+  background-repeat: no-repeat;
+  background-position: 115.5% -8em;
+}
+h2 .chromecast {
+  display: none;
+}
+.chromecast h2 .chromecast {
+  display: inline;
+}
+#slack #chat {
+  width: 100%;
+  height: calc(100% - 2em);
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  font-size: 1.1em;
+}
+#chat p {
+  margin: 0 0 0.3em 0;
+  padding: 0;
+}
+#chat p.highlight {
+  color: #000;
+  background: darkorange;
+  font-weight: bold;
+}
+#chat img {
+  height: 1.5em;
+  vertical-align: bottom;
+}
+#meetup {
+  background: url(Meetup_Logo.png);
+  background-size: 33%;
+  background-repeat: no-repeat;
+  background-position: 100% -5em;
+}
+#meetup ul {
+  margin-left: 0;
+  padding-left: 0;
+  list-style-type: none;
+}
+#meetup li {
+  margin-bottom: 0.5em;
+}
+#meetup strong {
+  font-size: 1.1em;
+}
+#meetup .today {
+  background: rgba(128,128,128,0.2);
+  padding: 0.5ex 0.5em;
+  margin-left: -0.5ex;
+  display: inline-block;
+}
+h2 img {
+  vertical-align: text-bottom;
+}
+#patreon span {
+  font-weight: bold;
+  font-size: 1.5em;
+}
